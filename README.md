@@ -5,8 +5,7 @@
 ## Спецификация
 
 В файле [specification/Калькулятор стоимости поддержки 1 линия
-ColumbusCare.xlsx](specification/Калькулятор стоимости поддержки 1 линия
-ColumbusCare.xlsx) — драфт калькулятора стоимости поддержки: 1 линия
+ColumbusCare.xlsx](specification/Калькулятор стоимости поддержки 1 линия ColumbusCare.xlsx) — драфт калькулятора стоимости поддержки: 1 линия
 ColumbusCare.
 
 Цветами выделены:
