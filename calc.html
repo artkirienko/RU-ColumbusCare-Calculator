@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Калькулятор стоимости поддержки — первая линия ColumbusCare</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <script type="text/javascript">
+            /*
+            * Калькулятор стоимости поддержки — первая линия ColumbusCare
+            */
+            function calc() {
+                // Константы -->
+
+                // Используемые модули
+                var budgeting_const = 1; //Бюджетирование
+                var purchase_const = 1; //Закупки
+                var salesandmarketing_const = 1; //Продажи и маркетинг
+                var retail_const = 2; //Розничная торговля
+                var planning_const = 2; //Сводное планирование
+                var wms_const = 2; //Управление складом
+                var manufacturing_const = 2; //Управление производством
+                var staff_const = 2; //Расчеты с персоналом и кадры
+                var mainassets_const = 1; //Основные средства
+                var fiscal_const = 2; //Налоговый учет
+
+                // График поддержки
+                var schedule_8x5_multiplier_const = 1; //Мультипликатор кол-ва сотрудников
+                var schedule_24x7_multiplier_const = 1.5; //Мультипликатор кол-ва сотрудников
+                var schedule_8x5_days_per_month_const = 21; //Кол-во рабочих  дней / месяц
+                var schedule_24x7_days_per_month_const = 30; //Кол-во рабочих  дней / месяц
+                var schedule_8x5_hours_per_day_const = 8; //Кол-во рабочих час/ день
+                var schedule_24x7_hours_per_day_const = 24; //Кол-во рабочих час/ день
+
+                // Запросы и интеграция
+                var all_calls_const = 1; //Все запросы пользователей
+                var not_solved_calls_const = 1.5; //Не решенные 1-ой линией поддержки
+                var utilization_const = 0.75; //Утилизация
+                var employee_price_const = 120000; //Цена сотрудника руб/месяц
+                var laboriousness1_const = 0.2; //Трудоемкость 1 запроса, час
+                var laboriousness2_const = 0.4; //Трудоемкость 1 запроса, час
+                var integration1_const = 2; //Интеграция >
+                var integration2_const = 1.5; //Интеграция >
+                // Константы <--
+
+                // Ссылки на элементы формы -->]
+                var avgcalls = document.getElementById("avgcalls"); //Среднее кол-во запросов в месяц
+                var topcalls = document.getElementById("topcalls"); //Кол-во запросов в течении 1 часа в периоды пиковой нагрузки
+                var schedule = document.getElementById("schedule"); //График поддержки
+                var budgeting = document.getElementById("budgeting"); //Бюджетирование
+                var purchase = document.getElementById("purchase"); //Закупки
+                var salesandmarketing = document.getElementById("salesandmarketing"); //Продажи и маркетинг
+                var retail = document.getElementById("retail"); //Розничная торговля
+                var planning = document.getElementById("planning"); //Сводное планирование
+                var wms = document.getElementById("wms"); //Управление складом
+                var manufacturing = document.getElementById("manufacturing"); //Управление производством
+                var staff = document.getElementById("staff"); //Расчеты с персоналом и кадры
+                var mainassets = document.getElementById("mainassets"); //Основные средства
+                var fiscal = document.getElementById("fiscal"); //Налоговый учет
+                var result_min = document.getElementById("result_min");
+                var result_max = document.getElementById("result_max");
+                // Ссылки на элементы формы <--
+
+                // Ссылки на отладочные элементы формы -->
+                var employee_load_hour_day_min_link = document.getElementById("employee_load_hour_day_min_link"); //Загрузка сотрудников час / день min
+                var employee_load_hour_day_max_link = document.getElementById("employee_load_hour_day_max_link"); //Загрузка сотрудников час / день max
+                var employee_load_hour_peak_hour_min_link = document.getElementById("employee_load_hour_peak_hour_min_link"); //Загрузка сотрудников час /пиковый час min
+                var employee_load_hour_peak_hour_max_link = document.getElementById("employee_load_hour_peak_hour_max_link"); //Загрузка сотрудников час /пиковый час max
+                var max_working_hours_day_min_link = document.getElementById("max_working_hours_day_min_link"); //Макс кол-во рабочих часов  в день min
+                var max_working_hours_day_max_link = document.getElementById("max_working_hours_day_max_link"); //Макс кол-во рабочих часов  в день max
+                var max_working_hours_peak_hour_min_link = document.getElementById("max_working_hours_peak_hour_min_link"); //Макс кол-во рабочих часов в пиковый час min
+                var max_working_hours_peak_hour_max_link = document.getElementById("max_working_hours_peak_hour_max_link"); //Макс кол-во рабочих часов в пиковый час max
+                var employee_multiplier_min_link = document.getElementById("employee_multiplier_min_link"); //Мультипликатор кол-ва сотрудников min
+                var employee_multiplier_max_link = document.getElementById("employee_multiplier_max_link"); //Мультипликатор кол-ва сотрудников max
+                var employee_qty_day_min_link = document.getElementById("employee_qty_day_min_link"); //Кол-во сотрудников в день min
+                var employee_qty_day_max_link = document.getElementById("employee_qty_day_max_link"); //Кол-во сотрудников в день max
+                var employee_qty_peak_hour_min_link = document.getElementById("employee_qty_peak_hour_min_link"); //Кол-во сотрудников в пиковый час min
+                var employee_qty_peak_hour_max_link = document.getElementById("employee_qty_peak_hour_max_link"); //Кол-во сотрудников в пиковый час max
+                var employee_qty_min_link = document.getElementById("employee_qty_min_link"); //Кол-во сотрудников Итого min
+                var employee_qty_max_link = document.getElementById("employee_qty_max_link"); //Кол-во сотрудников Итого max
+                // Ссылки на отладочные элементы формы <--
+
+                // Промежуточные значения вычислений -->
+                var laboriousness_one_task_hour_min = 0; //Трудоемкость 1 запроса, час min
+                var laboriousness_one_task_hour_max = 0; //Трудоемкость 1 запроса, час max
+                var employee_load_hour_day_min = 0; //Загрузка сотрудников час / день min
+                var employee_load_hour_day_max = 0; //Загрузка сотрудников час / день max
+                var employee_load_hour_peak_hour_min = 0; //Загрузка сотрудников час /пиковый час min
+                var employee_load_hour_peak_hour_max = 0; //Загрузка сотрудников час /пиковый час max
+                var max_working_hours_day_min = 0; //Макс кол-во рабочих часов  в день min
+                var max_working_hours_day_max = 0; //Макс кол-во рабочих часов  в день max
+                var max_working_hours_peak_hour_min = 0; //Макс кол-во рабочих часов в пиковый час min
+                var max_working_hours_peak_hour_max = 0; //Макс кол-во рабочих часов в пиковый час max
+                var employee_multiplier_min = 0; //Мультипликатор кол-ва сотрудников min
+                var employee_multiplier_max = 0; //Мультипликатор кол-ва сотрудников max
+                var employee_qty_day_min = 0; //Кол-во сотрудников в день min
+                var employee_qty_day_max = 0; //Кол-во сотрудников в день max
+                var employee_qty_peak_hour_min = 0; //Кол-во сотрудников в пиковый час min
+                var employee_qty_peak_hour_max = 0; //Кол-во сотрудников в пиковый час max
+                var employee_qty_min = 0; //Кол-во сотрудников Итого min
+                var employee_qty_max = 0; //Кол-во сотрудников Итого max
+                // Промежуточные значения вычислений <--
+
+                // Вычисление среднего значения по используемым модулям -->
+                var averages = 0;
+                var averages_count = 0;
+                if (budgeting.checked == true)
+                {
+                    averages += budgeting_const;
+                    averages_count += 1;
+                }
+                if (purchase.checked == true)
+                {
+                    averages += purchase_const;
+                    averages_count += 1;
+                }
+                if (salesandmarketing.checked == true)
+                {
+                    averages += salesandmarketing_const;
+                    averages_count += 1;
+                }
+                if (retail.checked == true)
+                {
+                    averages += retail_const;
+                    averages_count += 1;
+                }
+                if (planning.checked == true)
+                {
+                    averages += planning_const;
+                    averages_count += 1;
+                }
+                if (wms.checked == true)
+                {
+                    averages += wms_const;
+                    averages_count += 1;
+                }
+                if (manufacturing.checked == true)
+                {
+                    averages += manufacturing_const;
+                    averages_count += 1;
+                }
+                if (staff.checked == true)
+                {
+                    averages += staff_const;
+                    averages_count += 1;
+                }
+                if (mainassets.checked == true)
+                {
+                    averages += mainassets_const;
+                    averages_count += 1;
+                }
+                if (fiscal.checked == true)
+                {
+                    averages += fiscal_const;
+                    averages_count += 1;
+                }
+                averages /= (averages_count * 1.0);
+                // Вычисление среднего значения по используемым модулям <--
+
+                // Вычисление минимальной стоимости -->
+                var price_min = 0; //Стоимость поддержки ₽/месяц min
+
+                laboriousness_one_task_hour_min = averages;
+
+                if (parseInt(systems.value) > integration1_const)
+                {
+                    laboriousness_one_task_hour_min *= integration2_const;
+                }
+                else
+                {
+                    laboriousness_one_task_hour_min *= 1;
+                }
+
+                if (calls.value == "all")
+                {
+                    laboriousness_one_task_hour_min *= all_calls_const;
+                }
+                if (calls.value == "not_solved")
+                {
+                    laboriousness_one_task_hour_min *= not_solved_calls_const;
+                }
+
+                laboriousness_one_task_hour_min *= laboriousness1_const; //Трудоемкость 1 запроса, час min - вычислена
+
+                employee_load_hour_day_min = parseInt(avgcalls.value); //Загрузка сотрудников час / день min
+                if (schedule.options[schedule.selectedIndex].value == "24x7")
+                {
+                    employee_load_hour_day_min /= (1.0 * schedule_24x7_days_per_month_const);
+                }
+                if (schedule.options[schedule.selectedIndex].value == "8x5")
+                {
+                    employee_load_hour_day_min /= (1.0 * schedule_8x5_days_per_month_const);
+                }
+                employee_load_hour_day_min *= laboriousness_one_task_hour_min; //Загрузка сотрудников час / день min - вычислена
+
+                employee_load_hour_peak_hour_min = parseInt(topcalls.value); //Загрузка сотрудников час /пиковый час min
+                employee_load_hour_peak_hour_min *= laboriousness_one_task_hour_min; //Загрузка сотрудников час /пиковый час min - вычислена
+
+                if (schedule.options[schedule.selectedIndex].value == "24x7")
+                {
+                    max_working_hours_day_min = schedule_24x7_hours_per_day_const;
+                }
+                if (schedule.options[schedule.selectedIndex].value == "8x5")
+                {
+                    max_working_hours_day_min = schedule_8x5_hours_per_day_const;
+                }
+
+                max_working_hours_day_min *= utilization_const; //Макс кол-во рабочих часов  в день min - вычислена
+
+                max_working_hours_peak_hour_min = utilization_const; //Макс кол-во рабочих часов в пиковый час min - вычислена
+
+
+                if (schedule.options[schedule.selectedIndex].value == "24x7")
+                {
+                    employee_multiplier_min = schedule_24x7_multiplier_const;
+                }
+                if (schedule.options[schedule.selectedIndex].value == "8x5")
+                {
+                    employee_multiplier_min = schedule_8x5_multiplier_const; //Мультипликатор кол-ва сотрудников min - вычислен
+                }
+
+                if (employee_load_hour_day_min/max_working_hours_day_min < 0.44)
+                {
+                    employee_qty_day_min = 0.5;
+                }
+                else
+                {
+                    employee_qty_day_min = Math.ceil(employee_load_hour_day_min/max_working_hours_day_min);
+                }
+                employee_qty_day_min *= employee_multiplier_min; //Кол-во сотрудников в день min - вычислен
+
+                if (employee_load_hour_peak_hour_min/max_working_hours_peak_hour_min < 0.44)
+                {
+                    employee_qty_peak_hour_min = 0.5;
+                }
+                else
+                {
+                    employee_qty_peak_hour_min = Math.ceil(employee_load_hour_peak_hour_min/max_working_hours_peak_hour_min); //Кол-во сотрудников в пиковый час min - вычислено
+                }
+
+                employee_qty_min = (employee_qty_peak_hour_min > employee_qty_day_min) ? employee_qty_peak_hour_min : employee_qty_day_min;
+                //Кол-во сотрудников Итого min - вычислен
+
+                price_min = employee_qty_min * employee_price_const;
+                // Вычисление минимальной стоимости <--
+
+                // Вычисление максимальной стоимости -->
+                var price_max = 0; //Стоимость поддержки ₽/месяц max
+
+                laboriousness_one_task_hour_max = averages;
+
+                if (parseInt(systems.value) > integration1_const)
+                {
+                    laboriousness_one_task_hour_max *= integration2_const;
+                }
+                else
+                {
+                    laboriousness_one_task_hour_max *= 1;
+                }
+
+                if (calls.value == "all")
+                {
+                    laboriousness_one_task_hour_max *= all_calls_const;
+                }
+                if (calls.value == "not_solved")
+                {
+                    laboriousness_one_task_hour_max *= not_solved_calls_const;
+                }
+
+                laboriousness_one_task_hour_max *= laboriousness2_const; //Трудоемкость 1 запроса, час max - вычислена
+
+                employee_load_hour_day_max = parseInt(avgcalls.value); //Загрузка сотрудников час / день max
+
+                if (schedule.options[schedule.selectedIndex].value == "24x7")
+                {
+                    employee_load_hour_day_max /= (1.0 * schedule_24x7_days_per_month_const);
+                }
+                if (schedule.options[schedule.selectedIndex].value == "8x5")
+                {
+                    employee_load_hour_day_max /= (1.0 * schedule_8x5_days_per_month_const);
+                }
+                employee_load_hour_day_max *= laboriousness_one_task_hour_max; //Загрузка сотрудников час / день max - вычислена
+
+                employee_load_hour_peak_hour_max = parseInt(topcalls.value); //Загрузка сотрудников час /пиковый час max
+                employee_load_hour_peak_hour_max *= laboriousness_one_task_hour_max; //Загрузка сотрудников час /пиковый час max - вычислена
+
+                if (schedule.options[schedule.selectedIndex].value == "24x7")
+                {
+                    max_working_hours_day_max = schedule_24x7_hours_per_day_const;
+                }
+                if (schedule.options[schedule.selectedIndex].value == "8x5")
+                {
+                    max_working_hours_day_max = schedule_8x5_hours_per_day_const;
+                }
+
+                max_working_hours_day_max *= utilization_const; //Макс кол-во рабочих часов  в день max - вычислена
+                max_working_hours_peak_hour_max = utilization_const; //Макс кол-во рабочих часов в пиковый час max - вычислена
+
+                if (schedule.options[schedule.selectedIndex].value == "24x7")
+                {
+                    employee_multiplier_max = schedule_24x7_multiplier_const;
+                }
+                if (schedule.options[schedule.selectedIndex].value == "8x5")
+                {
+                    employee_multiplier_max = schedule_8x5_multiplier_const; //Мультипликатор кол-ва сотрудников max - вычислен
+                }
+
+                if (employee_load_hour_day_max/max_working_hours_day_max < 0.44)
+                {
+                    employee_qty_day_max = 0.5;
+                }
+                else
+                {
+                    employee_qty_day_max = Math.ceil(employee_load_hour_day_min/max_working_hours_day_max);
+                }
+                employee_qty_day_max *= employee_multiplier_max; //Кол-во сотрудников в день max - вычислен
+
+                if (employee_load_hour_peak_hour_max/max_working_hours_peak_hour_max < 0.44)
+                {
+                    employee_qty_peak_hour_max = 0.5;
+                }
+                else
+                {
+                    employee_qty_peak_hour_max = Math.ceil(employee_load_hour_peak_hour_max/max_working_hours_peak_hour_max); //Кол-во сотрудников в пиковый час max - вычислено
+                }
+
+                employee_qty_max = (employee_qty_peak_hour_max > employee_qty_day_max) ? employee_qty_peak_hour_max : employee_qty_day_max;
+                //Кол-во сотрудников Итого max - вычислен
+
+                price_max = employee_qty_max * employee_price_const;
+
+                // Вычисление максимальной стоимости <--
+
+                // Ошибка деления на 0
+                if (averages_count == 0.0)
+                {
+                    price_min = "Укажите хотя бы один используемый модуль";
+                    price_max = "Укажите хотя бы один используемый модуль";
+                }
+                //
+
+                // Установка значений стоимости -->
+                    result_min.innerHTML = price_min;
+                    result_max.innerHTML = price_max;
+                // Установка значений стоимости <--
+
+                // Установка отладочных значений -->
+                laboriousness_one_task_hour_min_link.innerHTML = laboriousness_one_task_hour_min;
+                laboriousness_one_task_hour_max_link.innerHTML = laboriousness_one_task_hour_max;
+                employee_load_hour_day_min_link.innerHTML = employee_load_hour_day_min;
+                employee_load_hour_day_max_link.innerHTML = employee_load_hour_day_max;
+                employee_load_hour_peak_hour_min_link.innerHTML = employee_load_hour_peak_hour_min;
+                employee_load_hour_peak_hour_max_link.innerHTML = employee_load_hour_peak_hour_max;
+                max_working_hours_day_min_link.innerHTML = max_working_hours_day_min;
+                max_working_hours_day_max_link.innerHTML = max_working_hours_day_max;
+                max_working_hours_peak_hour_min_link.innerHTML = max_working_hours_peak_hour_min;
+                max_working_hours_peak_hour_max_link.innerHTML = max_working_hours_peak_hour_max;
+                employee_multiplier_min_link.innerHTML = employee_multiplier_min;
+                employee_multiplier_max_link.innerHTML = employee_multiplier_max;
+                employee_qty_day_min_link.innerHTML = employee_qty_day_min;
+                employee_qty_day_max_link.innerHTML = employee_qty_day_max;
+                employee_qty_peak_hour_min_link.innerHTML = employee_qty_peak_hour_min;
+                employee_qty_peak_hour_max_link.innerHTML = employee_qty_peak_hour_max;
+                employee_qty_min_link.innerHTML = employee_qty_min;
+                employee_qty_max_link.innerHTML = employee_qty_max;
+                // Установка отладочных значений <--
+            }
+        </script>
+    </head>
+
+
+    <body>
+        <div class="carecalc">
+            <div class="support">
+                <label for="avgcalls">Среднее кол-во запросов в месяц</label>
+                <input type="text" onchange="calc()" value="183" id="avgcalls"/>
+                <br/>
+                <label for="topcalls">Кол-во запросов в течении 1 часа в периоды пиковой нагрузки</label>
+                <input type="text" onchange="calc()" value="2" id="topcalls" />
+                <br/>
+                <label for="calls">Какие запросы передаются в Columbus</label>
+                <select id="calls" onchange="calc()">
+                    <option value="all">Все запросы пользователей</option>
+                    <option value="not_solved">Не решенные 1-ой линией поддержки</option>
+                </select>
+                <br/>
+                <label for="schedule">График поддержки</label>
+                <select id="schedule" onchange="calc()">
+                    <option value="24x7">24x7</option>
+                    <option value="8x5">8x5</option>
+                </select>
+            </div>
+            <div class="modules">
+                <h3>Используемые модули</h3>
+                <label for="budgeting">Бюджетирование</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="budgeting" />
+                <br/>
+                <label for="purchase">Закупки</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="purchase" />
+                <br/>
+                <label for="salesandmarketing">Продажи и маркетинг</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="salesandmarketing" />
+                <br/>
+                <label for="retail">Розничная торговля</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="retail" />
+                <br/>
+                <label for="planning">Сводное планирование</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="planning" />
+                <br/>
+                <label for="wms">Управление складом</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="wms" />
+                <br/>
+                <label for="manufacturing">Управление производством</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="manufacturing" />
+                <br/>
+                <label for="staff">Расчеты с персоналом и кадры</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="staff" />
+                <br/>
+                <label for="mainassets">Основные средства</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="mainassets" />
+                <br/>
+                <label for="fiscal">Налоговый учёт</label>
+                <input type="checkbox" onchange="calc()" onclick="calc()" value="0" id="fiscal" />
+            </div>
+            <div class="erps">
+                <br/>
+                <label for="systems">Количество систем, интегрированных с ERP</label>
+                <input type="text" id="systems" value="2" onchange="calc()" />
+            </div>
+            <div class="sum">
+                <h3>Стоимость</h3>
+                <div>Стоимость поддержки ₽/месяц min: <span id="result_min">0</span> руб.</div>
+                <div>Стоимость поддержки ₽/месяц max: <span id="result_max">0</span> руб.</div>
+            </div>
+            <div class="systemvalues">
+                <h3>Отладочные</h3>
+                <div>Трудоемкость 1 запроса, час min <span id="laboriousness_one_task_hour_min_link">0</span></div>
+                <div>Трудоемкость 1 запроса, час max <span id="laboriousness_one_task_hour_max_link">0</span></div>
+                <div>Загрузка сотрудников час / день min <span id="employee_load_hour_day_min_link">0</span></div>
+                <div>Загрузка сотрудников час / день max <span id="employee_load_hour_day_max_link">0</span></div>
+                <div>Загрузка сотрудников час /пиковый час min <span id="employee_load_hour_peak_hour_min_link">0</span></div>
+                <div>Загрузка сотрудников час /пиковый час max <span id="employee_load_hour_peak_hour_max_link">0</span></div>
+                <div>Макс кол-во рабочих часов  в день min <span id="max_working_hours_day_min_link">0</span></div>
+                <div>Макс кол-во рабочих часов  в день max <span id="max_working_hours_day_max_link">0</span></div>
+                <div>Макс кол-во рабочих часов в пиковый час min <span id="max_working_hours_peak_hour_min_link">0</span></div>
+                <div>Макс кол-во рабочих часов в пиковый час max <span id="max_working_hours_peak_hour_max_link">0</span></div>
+                <div>Мультипликатор кол-ва сотрудников min <span id="employee_multiplier_min_link">0</span></div>
+                <div>Мультипликатор кол-ва сотрудников max <span id="employee_multiplier_max_link">0</span></div>
+                <div>Кол-во сотрудников в день min <span id="employee_qty_day_min_link">0</span></div>
+                <div>Кол-во сотрудников в день max <span id="employee_qty_day_max_link">0</span></div>
+                <div>Кол-во сотрудников в пиковый час min <span id="employee_qty_peak_hour_min_link">0</span></div>
+                <div>Кол-во сотрудников в пиковый час max <span id="employee_qty_peak_hour_max_link">0</span></div>
+                <div>Кол-во сотрудников Итого min <span id="employee_qty_min_link">0</span></div>
+                <div>Кол-во сотрудников Итого max <span id="employee_qty_max_link">0</span></div>
+            </div>
+        </div>
+    </body>
+</html>
